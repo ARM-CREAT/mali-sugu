@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Suppression de compte — MALI SUGU</title>
+<style>
+:root{--vert:#14a44d;--vert-d:#0a3d1f;--jaune:#f6d50f;--rouge:#ce1126;--bg:#fafafa;--line:#e5e5e5}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:720px;margin:0 auto;padding:20px;color:#222;line-height:1.55;background:var(--bg)}
+.flag{height:6px;background:linear-gradient(90deg,var(--vert) 0 33.33%,var(--jaune) 33.33% 66.66%,var(--rouge) 66.66% 100%);margin:-20px -20px 20px}
+h1{color:var(--vert-d);border-bottom:3px solid var(--vert);padding-bottom:10px}
+h2{color:var(--vert-d);margin-top:28px;font-size:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+.warn{background:#fde2e6;border-left:4px solid var(--rouge);padding:14px;border-radius:8px;margin:14px 0}
+.info{background:#f1faf3;border-left:4px solid var(--vert);padding:14px;border-radius:8px;margin:14px 0}
+label{display:block;font-weight:600;color:var(--vert-d);margin:10px 0 4px;font-size:14px}
+input,textarea,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+textarea{min-height:90px;resize:vertical}
+button{background:var(--rouge);color:#fff;border:0;padding:12px 22px;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px;margin-top:12px}
+button:hover{background:#a30c1f}
+small{color:#666;display:block;margin-top:4px}
+.devise{text-align:center;color:#666;font-style:italic;margin-top:30px;padding-top:14px;border-top:1px solid var(--line);font-size:13px}
+ul{padding-left:22px}
+li{margin-bottom:6px}
+a{color:var(--vert)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.brand h1{margin:0;border:none;font-size:20px}
+.brand small{color:#666;font-size:11px;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="flag"></div>
+
+<div class="brand">
+  <div>
+    <h1>🗑️ Suppression de compte MALI SUGU</h1>
+    <small>APP DE VENTE EN LIGNE AU MALI</small>
+  </div>
+</div>
+
+<p>Cette page vous permet de <strong>demander la suppression de votre compte MALI SUGU</strong> et de toutes les données associées (annonces, commandes, messages, etc.).</p>
+
+<div class="warn">
+  <strong>⚠️ Attention :</strong> La suppression est <strong>définitive et irréversible</strong>. Vous perdrez l'accès à votre historique de commandes, à vos annonces actives, et à votre messagerie. Si vous avez des transactions en cours, attendez qu'elles soient terminées avant de supprimer votre compte.
+</div>
+
+<h2>📋 Quelles données sont supprimées ?</h2>
+<div class="card">
+  <ul>
+    <li>✅ Votre compte (email, mot de passe, profil)</li>
+    <li>✅ Votre nom, téléphone, photo de profil</li>
+    <li>✅ Toutes vos annonces de produits (actives et archivées)</li>
+    <li>✅ Photos que vous avez uploadées</li>
+    <li>✅ Vos messages dans la messagerie</li>
+    <li>✅ Vos coordonnées GPS / adresses</li>
+    <li>✅ Notation et avis donnés / reçus</li>
+    <li>✅ Préférences et paramètres</li>
+  </ul>
+</div>
+
+<h2>📌 Quelles données sont conservées ?</h2>
+<div class="card">
+  <ul>
+    <li>💰 <strong>Historique de transactions financières</strong> — anonymisé mais conservé 5 ans (obligation comptable et fiscale au Mali)</li>
+    <li>📊 <strong>Statistiques anonymes</strong> (ex: « X transactions au mois de mars ») — sans aucun lien avec votre identité</li>
+    <li>🔒 <strong>Logs de sécurité techniques</strong> — anonymisés, conservés 90 jours pour la prévention de fraude</li>
+    <li>⚖️ <strong>Données nécessaires en cas de litige juridique</strong> — uniquement si une procédure est en cours</li>
+  </ul>
+</div>
+
+<h2>📝 Demander la suppression</h2>
+
+<div class="info">
+  <strong>Délai de traitement :</strong> votre demande sera traitée dans un délai maximum de <strong>30 jours</strong>. Vous recevrez un email de confirmation.
+</div>
+
+<div class="card">
+  <p><strong>Méthode 1 — Formulaire en ligne (recommandée)</strong></p>
+  <form id="delForm" onsubmit="event.preventDefault();envoyer()">
+    <label>Nom complet *</label>
+    <input type="text" id="nom" required placeholder="Prénom + Nom"/>
+
+    <label>Email du compte MALI SUGU *</label>
+    <input type="email" id="email" required placeholder="exemple@email.com"/>
+
+    <label>Numéro de téléphone associé *</label>
+    <input type="tel" id="tel" required placeholder="+223 XX XX XX XX"/>
+
+    <label>Type de demande *</label>
+    <select id="type" required>
+      <option value="">— Sélectionnez —</option>
+      <option value="complete">Suppression complète du compte et de toutes les données</option>
+      <option value="partielle">Suppression partielle (préciser ci-dessous)</option>
+      <option value="annonces">Supprimer uniquement mes annonces (garder mon compte)</option>
+      <option value="messages">Supprimer uniquement mes messages</option>
+    </select>
+
+    <label>Avez-vous des transactions en cours ?</label>
+    <select id="transactions">
+      <option value="non">Non, aucune</option>
+      <option value="oui">Oui, des commandes en attente</option>
+      <option value="ne-sais-pas">Je ne sais pas</option>
+    </select>
+    <small>Si vous avez des commandes en cours, nous vous recommandons d'attendre qu'elles soient terminées avant la suppression.</small>
+
+    <label>Précisions / motif (facultatif)</label>
+    <textarea id="motif" placeholder="Si suppression partielle, indiquez quoi supprimer. Sinon, dites-nous ce qu'on aurait pu améliorer pour vous garder !"></textarea>
+
+    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:normal;font-size:13px">
+      <input type="checkbox" required style="width:auto;margin-top:3px"/>
+      <span>Je confirme être le titulaire du compte et avoir compris que cette suppression est définitive après le délai de 30 jours.</span>
+    </label>
+
+    <button type="submit">📤 Envoyer ma demande de suppression</button>
+  </form>
+  <small>Votre demande ouvre votre client mail avec un message pré-rempli. Cliquez « Envoyer » dans votre messagerie pour finaliser.</small>
+</div>
+
+<div class="card">
+  <p><strong>Méthode 2 — Email direct</strong></p>
+  <p>Envoyez un email à <a href="mailto:bouadiakite@gmail.com?subject=Demande%20de%20suppression%20de%20compte%20MALI%20SUGU&body=Bonjour%2C%0A%0AJe%20demande%20la%20suppression%20de%20mon%20compte%20MALI%20SUGU%20et%20de%20toutes%20les%20donn%C3%A9es%20associ%C3%A9es.%0A%0ANom%20complet%20%3A%20%0AEmail%20du%20compte%20%3A%20%0AT%C3%A9l%C3%A9phone%20%3A%20%0A%0AMerci%20de%20confirmer%20la%20suppression.%0A%0ACordialement">bouadiakite@gmail.com</a> avec :</p>
+  <ul>
+    <li>Sujet : <em>Demande de suppression de compte MALI SUGU</em></li>
+    <li>Votre nom complet</li>
+    <li>Email du compte</li>
+    <li>Numéro de téléphone associé</li>
+    <li>Type de demande (suppression totale / partielle)</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p><strong>Méthode 3 — Directement dans l'application mobile</strong></p>
+  <ol>
+    <li>Ouvrez MALI SUGU sur votre téléphone</li>
+    <li>Allez dans <strong>Profil → Paramètres → Compte</strong></li>
+    <li>Cliquez sur <strong>« Supprimer mon compte »</strong></li>
+    <li>Confirmez votre choix</li>
+  </ol>
+  <small>Cette option sera disponible dans la prochaine mise à jour de l'app. En attendant, utilisez la méthode 1 ou 2.</small>
+</div>
+
+<h2>⏱️ Procédure de traitement</h2>
+<div class="card">
+  <ol>
+    <li>Réception de votre demande par notre équipe</li>
+    <li>Vérification de votre identité (email de confirmation)</li>
+    <li>Vérification qu'aucune transaction urgente n'est en cours</li>
+    <li>Suppression de vos données dans Convex (notre backend)</li>
+    <li>Confirmation par email dans un délai maximum de 30 jours</li>
+  </ol>
+</div>
+
+<h2>⚖️ Vos autres droits</h2>
+<p>Outre la suppression, vous pouvez aussi :</p>
+<ul>
+  <li><strong>Accéder</strong> à toutes vos données — voir <a href="privacy-policy.html">politique de confidentialité</a></li>
+  <li><strong>Rectifier</strong> en cas d'erreur</li>
+  <li><strong>Récupérer</strong> vos données (portabilité)</li>
+  <li><strong>Refuser les publicités personnalisées</strong> dans les paramètres Android</li>
+</ul>
+
+<p>Pour ces autres demandes : <a href="mailto:bouadiakite@gmail.com">bouadiakite@gmail.com</a></p>
+
+<div class="devise">
+  <strong>MALI SUGU</strong> — Le marché du Mali, à portée de main.<br>
+  <a href="privacy-policy.html">Politique de confidentialité</a>
+</div>
+
+<script>
+function envoyer(){
+  const nom = document.getElementById('nom').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const tel = document.getElementById('tel').value.trim();
+  const type = document.getElementById('type').value;
+  const trans = document.getElementById('transactions').value;
+  const motif = document.getElementById('motif').value.trim();
+  const sujet = encodeURIComponent('Demande de suppression de compte MALI SUGU');
+  const corps = encodeURIComponent(
+`Bonjour,
+
+Je demande la suppression de mon compte MALI SUGU et des données associées.
+
+Nom complet : ${nom}
+Email du compte : ${email}
+Téléphone : ${tel}
+
+Type de demande : ${type}
+Transactions en cours : ${trans}
+
+Précisions :
+${motif || '(aucune)'}
+
+Je confirme être le titulaire du compte et avoir compris que cette suppression est définitive.
+
+Cordialement,
+${nom}`);
+  window.location.href = `mailto:bouadiakite@gmail.com?subject=${sujet}&body=${corps}`;
+}
+</script>
+</body>
+</html>

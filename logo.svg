@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#14a44d"/>
+      <stop offset="50%" stop-color="#f6d50f"/>
+      <stop offset="100%" stop-color="#ce1126"/>
+    </linearGradient>
+  </defs>
+  <!-- Cercle de fond aux couleurs Mali -->
+  <circle cx="100" cy="100" r="95" fill="url(#bg)"/>
+  <circle cx="100" cy="100" r="78" fill="#fff" opacity="0.96"/>
+  <!-- Panier de marché -->
+  <g transform="translate(60,60)">
+    <!-- Anses du panier -->
+    <path d="M15 18 Q15 0 40 0 Q65 0 65 18" fill="none" stroke="#0a3d1f" stroke-width="4" stroke-linecap="round"/>
+    <!-- Corps du panier -->
+    <path d="M5 18 L75 18 L70 70 Q70 75 65 75 L15 75 Q10 75 10 70 Z" fill="#14a44d" stroke="#0a3d1f" stroke-width="2.5"/>
+    <!-- Tressage -->
+    <line x1="20" y1="30" x2="20" y2="70" stroke="#0a3d1f" stroke-width="0.8" opacity="0.4"/>
+    <line x1="30" y1="28" x2="30" y2="72" stroke="#0a3d1f" stroke-width="0.8" opacity="0.4"/>
+    <line x1="40" y1="27" x2="40" y2="73" stroke="#0a3d1f" stroke-width="0.8" opacity="0.4"/>
+    <line x1="50" y1="28" x2="50" y2="72" stroke="#0a3d1f" stroke-width="0.8" opacity="0.4"/>
+    <line x1="60" y1="30" x2="60" y2="70" stroke="#0a3d1f" stroke-width="0.8" opacity="0.4"/>
+    <line x1="8" y1="35" x2="72" y2="35" stroke="#0a3d1f" stroke-width="0.6" opacity="0.4"/>
+    <line x1="9" y1="50" x2="71" y2="50" stroke="#0a3d1f" stroke-width="0.6" opacity="0.4"/>
+    <line x1="10" y1="65" x2="70" y2="65" stroke="#0a3d1f" stroke-width="0.6" opacity="0.4"/>
+    <!-- Fruits/produits qui dépassent -->
+    <circle cx="25" cy="20" r="6" fill="#ce1126"/>
+    <circle cx="38" cy="14" r="7" fill="#f6d50f"/>
+    <circle cx="52" cy="20" r="6" fill="#14a44d"/>
+    <circle cx="62" cy="22" r="4" fill="#ce1126"/>
+  </g>
+  <!-- Texte MALI SUGU -->
+  <text x="100" y="170" text-anchor="middle" font-family="Georgia, serif"
+        font-size="20" font-weight="bold" fill="#0a3d1f" letter-spacing="2">MALI SUGU</text>
+</svg>

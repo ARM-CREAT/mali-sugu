@@ -1,0 +1,24 @@
+{
+  "name": "MALI SUGU — Marché en ligne du Mali",
+  "short_name": "MALI SUGU",
+  "description": "Achetez et vendez au Mali. Marketplace de proximité avec Orange Money, livraison, et appels directs entre acheteurs et vendeurs.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#14a44d",
+  "theme_color": "#14a44d",
+  "lang": "fr",
+  "categories": ["shopping", "business", "lifestyle"],
+  "icons": [
+    { "src": "logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "logo.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "logo.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Acheter", "url": "./index.html#catalogue" },
+    { "name": "Vendre", "url": "./index.html#vendre" },
+    { "name": "Mon panier", "url": "./index.html#panier" },
+    { "name": "Mes commandes", "url": "./index.html#commandes" }
+  ]
+}
