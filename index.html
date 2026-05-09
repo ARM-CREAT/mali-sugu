@@ -8,16 +8,85 @@
 <link rel="manifest" href="manifest.json"/>
 <link rel="icon" href="logo.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="logo.svg"/>
-<meta name="description" content="MALI SUGU — Marché en ligne du Mali. Achetez et vendez près de chez vous. Orange Money, livraison, contact direct vendeur. Le marché du Mali à portée de main."/>
-<meta name="keywords" content="MALI SUGU, marché Mali, vente en ligne Mali, Orange Money, marketplace Bamako, achat vente Mali, e-commerce Mali"/>
-<link rel="canonical" href="https://malisugu.vercel.app/"/>
+<meta name="description" content="MALI SUGU — Marché en ligne du Mali. Achetez et vendez près de chez vous : alimentation, vêtements, téléphones, électronique, artisanat. Orange Money, livraison, contact direct vendeur. Le marché du Mali à portée de main."/>
+<meta name="keywords" content="MALI SUGU, marché Mali, vente en ligne Mali, Orange Money Mali, marketplace Bamako, achat vente Mali, e-commerce Mali, petites annonces Mali, magasin en ligne Mali, Sebenikoro, Bamako shopping, livraison Mali, Moov Money, marketplace Afrique de l'Ouest, vente smartphone Mali, vêtements Mali, artisanat malien"/>
+<meta name="author" content="MALI SUGU"/>
+<meta name="robots" content="index, follow, max-image-preview:large"/>
+<meta name="googlebot" content="index, follow"/>
+<meta name="bingbot" content="index, follow"/>
+<link rel="canonical" href="https://mali-sugu.vercel.app/"/>
 
-<!-- Open Graph -->
+<!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
 <meta property="og:type" content="website"/>
 <meta property="og:locale" content="fr_FR"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="ar_MA"/>
+<meta property="og:url" content="https://mali-sugu.vercel.app/"/>
 <meta property="og:title" content="MALI SUGU — Marché en ligne du Mali"/>
-<meta property="og:description" content="Achetez et vendez au Mali. Marketplace de proximité, Orange Money, contact direct vendeur."/>
-<meta property="og:image" content="logo.svg"/>
+<meta property="og:description" content="Achetez et vendez partout au Mali. Marketplace de proximité avec Orange Money, livraison, contact direct vendeur."/>
+<meta property="og:image" content="https://mali-sugu.vercel.app/logo.svg"/>
+<meta property="og:image:alt" content="Logo MALI SUGU - Marché du Mali"/>
+<meta property="og:site_name" content="MALI SUGU"/>
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="MALI SUGU — Marché en ligne du Mali"/>
+<meta name="twitter:description" content="Achetez et vendez au Mali. Marketplace de proximité, Orange Money, livraison."/>
+<meta name="twitter:image" content="https://mali-sugu.vercel.app/logo.svg"/>
+
+<!-- Données structurées Schema.org : Organisation + LocalBusiness + WebSite -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://mali-sugu.vercel.app/#organization",
+      "name": "MALI SUGU",
+      "alternateName": "Marché du Mali",
+      "url": "https://mali-sugu.vercel.app/",
+      "logo": "https://mali-sugu.vercel.app/logo.svg",
+      "description": "Marketplace en ligne de proximité au Mali. Acheteurs et vendeurs connectés directement avec paiement Mobile Money.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "ML",
+        "addressLocality": "Bamako"
+      },
+      "areaServed": { "@type": "Country", "name": "Mali" },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "bouadiakite@gmail.com",
+        "contactType": "customer service",
+        "availableLanguage": ["French","Bambara","English","Spanish","Arabic"]
+      },
+      "sameAs": ["https://mali-sugu.vercel.app"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://mali-sugu.vercel.app/#website",
+      "url": "https://mali-sugu.vercel.app/",
+      "name": "MALI SUGU",
+      "publisher": { "@id": "https://mali-sugu.vercel.app/#organization" },
+      "inLanguage": "fr-FR",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://mali-sugu.vercel.app/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "OnlineStore",
+      "@id": "https://mali-sugu.vercel.app/#store",
+      "name": "MALI SUGU",
+      "url": "https://mali-sugu.vercel.app/",
+      "currenciesAccepted": "XOF",
+      "paymentAccepted": ["Orange Money", "Moov Money", "Cash on delivery"],
+      "areaServed": { "@type": "Country", "name": "Mali" }
+    }
+  ]
+}
+</script>
 
 <style>
 :root{
@@ -847,6 +916,59 @@ function renderCommandes(){
     </div>`).join('');
 }
 
+/* ==================== SEO TEMPS RÉEL ==================== */
+const INDEXNOW_KEY = 'b8c1d3e5f7a9c1d3e5f7a9c1d3e5f7a9';
+const SITE_URL = 'https://mali-sugu.vercel.app';
+
+function pingIndexNow(urls){
+  if(!Array.isArray(urls)) urls=[urls];
+  urls.forEach(u=>{
+    const ping = `https://api.indexnow.org/IndexNow?url=${encodeURIComponent(u)}&key=${INDEXNOW_KEY}&keyLocation=${encodeURIComponent(SITE_URL+'/'+INDEXNOW_KEY+'.txt')}`;
+    try{ fetch(ping, { mode:'no-cors' }); }catch(e){}
+  });
+  try{
+    fetch('https://api.indexnow.org/IndexNow', {
+      method:'POST', mode:'no-cors',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        host: 'mali-sugu.vercel.app', key: INDEXNOW_KEY,
+        keyLocation: SITE_URL+'/'+INDEXNOW_KEY+'.txt',
+        urlList: urls
+      })
+    });
+  }catch(e){}
+  console.log('🔍 IndexNow ping pour', urls);
+}
+
+/* Injection dynamique du schema Product pour les annonces récentes */
+function injectProductsSchema(){
+  document.querySelectorAll('script.schemaProduct').forEach(s=>s.remove());
+  const recents = [...(state.produits||[])].sort((a,b)=>(b.date||0)-(a.date||0)).slice(0,10);
+  recents.forEach(p=>{
+    const s = document.createElement('script');
+    s.type='application/ld+json'; s.className='schemaProduct';
+    s.textContent = JSON.stringify({
+      "@context":"https://schema.org",
+      "@type":"Product",
+      "name": p.titre,
+      "description": (p.desc||'').slice(0,500),
+      "image": p.photo || SITE_URL+'/logo.svg',
+      "category": p.cat || 'Autre',
+      "offers": {
+        "@type":"Offer",
+        "price": p.prix,
+        "priceCurrency":"XOF",
+        "availability": "https://schema.org/InStock",
+        "areaServed":{ "@type":"Country","name":"Mali" },
+        "seller": { "@type":"Person","name": p.vendeur || 'Vendeur MALI SUGU' }
+      },
+      "itemCondition": p.etat==='neuf'?'https://schema.org/NewCondition':'https://schema.org/UsedCondition',
+      "url": SITE_URL+'/#catalogue'
+    });
+    document.head.appendChild(s);
+  });
+}
+
 /* ==================== TRADUCTION 5 LANGUES ==================== */
 window.googleTranslateElementInit = function(){
   if(typeof google === 'undefined' || !google.translate) return;
@@ -923,6 +1045,17 @@ function installerApp(){
 }
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
+/* Wrap publierProduit pour ping IndexNow */
+const _publierProduitOriginal = window.publierProduit;
+window.publierProduit = function(){
+  const before = state.produits.length;
+  _publierProduitOriginal && _publierProduitOriginal();
+  if(state.produits.length > before){
+    pingIndexNow([SITE_URL+'/', SITE_URL+'/#catalogue']);
+    injectProductsSchema();
+  }
+};
+
 /* ==================== INIT ==================== */
 function renderAll(){
   renderCategories();
@@ -933,6 +1066,7 @@ function renderAll(){
   renderCompte();
   renderCommandes();
   updateCartBadge();
+  try{ injectProductsSchema(); }catch(e){}
 }
 function init(){
   document.getElementById('yr').textContent = new Date().getFullYear();

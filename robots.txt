@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /firebase-config.js
+
+Sitemap: https://mali-sugu.vercel.app/sitemap.xml
