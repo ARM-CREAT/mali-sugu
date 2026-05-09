@@ -36,18 +36,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // =============================================================
-// ⚠️ CONFIGURATION FIREBASE MALI SUGU — À COMPLÉTER
-// =============================================================
-// Remplacez les valeurs "VOTRE_..." par celles données par
-// Firebase Console après création du projet "mali-sugu"
+// CONFIGURATION FIREBASE OFFICIELLE MALI SUGU
 // =============================================================
 const firebaseConfig = {
-  apiKey: "VOTRE_API_KEY",
-  authDomain: "mali-sugu.firebaseapp.com",
-  projectId: "mali-sugu",
-  storageBucket: "mali-sugu.firebasestorage.app",
-  messagingSenderId: "VOTRE_SENDER_ID",
-  appId: "VOTRE_APP_ID"
+  apiKey: "AIzaSyAwoMG6EiciOTBawqMN4p-A-20BJHf4v3U",
+  authDomain: "mali-sugu-ed117.firebaseapp.com",
+  projectId: "mali-sugu-ed117",
+  storageBucket: "mali-sugu-ed117.firebasestorage.app",
+  messagingSenderId: "583727735875",
+  appId: "1:583727735875:web:7c9143aa2b04b8137fa0f6",
+  measurementId: "G-4R0JPDBE6B"
 };
 
 const app  = initializeApp(firebaseConfig);
@@ -109,13 +107,6 @@ function whenReady(fn){
 }
 
 whenReady(() => {
-  // Si la config n'est pas remplie, ne pas crasher
-  if(firebaseConfig.apiKey === 'VOTRE_API_KEY'){
-    indic('⚠️ Firebase non configuré', '#ce1126');
-    console.warn('⚠️ MALI SUGU : Firebase non configuré. Le site fonctionne en mode local. Pour activer la sync temps réel, complétez firebase-config.js');
-    return;
-  }
-
   indic('☁️ Cloud actif');
 
   // Écoute temps réel des produits (publics)
