@@ -109,7 +109,7 @@ function whenReady(fn){
 whenReady(() => {
   indic('☁️ Cloud actif');
 
-  // Écoute temps réel des produits (publics)
+  // ====== ÉCOUTE TEMPS RÉEL : PRODUITS (visible par tous) ======
   onSnapshot(collection(db, 'produits'), snap => {
     const arr = [];
     snap.forEach(d => arr.push({ ...d.data(), _cid: d.id, id: d.id }));
@@ -121,13 +121,39 @@ whenReady(() => {
     window.firstSync = true;
   }, e => console.warn('listen produits', e));
 
-  // Auth state
+  // ====== AUTH STATE & SYNC PROFIL ======
+  let unsubProfile=null, unsubCommandes=null;
   onAuthStateChanged(auth, async user => {
     window.CLOUD.signedIn = !!user;
     window.CLOUD.user = user;
+    // Désabonner les anciennes écoutes
+    if(unsubProfile){ unsubProfile(); unsubProfile=null; }
+    if(unsubCommandes){ unsubCommandes(); unsubCommandes=null; }
+
     if(user){
-      indic('☁️ Connecté · '+(user.displayName||user.email||'').split('@')[0], '#0a3d1f');
-      onSnapshot(query(collection(db, 'commandes'), where('acheteurId','==',user.uid)), snap => {
+      const label = (user.displayName||user.email||user.uid.slice(0,8));
+      indic('☁️ Connecté · '+label, '#0a3d1f');
+
+      // Sync profil utilisateur depuis Firestore
+      unsubProfile = onSnapshot(doc(db, 'users', user.uid), snap => {
+        const data = snap.data();
+        if(data){
+          window.state.user = { ...data, uid: user.uid };
+        } else if(user.email){
+          // Première connexion : créer le profil de base
+          setDoc(doc(db, 'users', user.uid), {
+            nom: user.displayName || user.email.split('@')[0],
+            email: user.email,
+            tel: '',
+            date: Date.now()
+          }, { merge: true });
+        }
+        window.save && window.save();
+        window.renderAll();
+      });
+
+      // Sync commandes de l'utilisateur connecté
+      unsubCommandes = onSnapshot(query(collection(db, 'commandes'), where('acheteurId','==',user.uid)), snap => {
         const arr = [];
         snap.forEach(d => arr.push({ ...d.data(), _cid: d.id, id: d.id }));
         arr.sort((a,b) => (b.date||0) - (a.date||0));
@@ -136,6 +162,7 @@ whenReady(() => {
       });
     } else {
       indic('☁️ Cloud actif');
+      // Pas connecté : on garde juste les infos locales
     }
   });
 
@@ -227,7 +254,89 @@ whenReady(() => {
     };
   }
 
-  console.log('🔥 MALI SUGU connecté à Firebase mali-sugu — sync temps réel web ↔ mobile');
+  // ====== CRÉATION DE COMPTE ====== (Firebase Auth + profil Firestore)
+  const _creerCompte = window.creerCompte;
+  if(_creerCompte){
+    window.creerCompte = async function(){
+      const v = id => (document.getElementById(id).value||'').trim();
+      const nom=v('uNom'), email=v('uMail'), tel=v('uTel');
+      if(!nom||!tel){ window.toast('⚠️ Nom et téléphone obligatoires'); return; }
+
+      try {
+        let cred;
+        if(email){
+          // Si email fourni : créer un compte Firebase Email/Password
+          // Mot de passe par défaut = téléphone (l'utilisateur peut le changer après)
+          const pwd = tel.replace(/[^0-9]/g,'')+'!';
+          try {
+            cred = await createUserWithEmailAndPassword(auth, email, pwd);
+          } catch(e){
+            // Si email déjà utilisé, essayer de se connecter avec
+            if(e.code==='auth/email-already-in-use'){
+              cred = await signInWithEmailAndPassword(auth, email, pwd);
+            } else throw e;
+          }
+          if(cred && nom){ try{ await updateProfile(cred.user, { displayName: nom }); }catch(e){} }
+        } else {
+          // Pas d'email : compte anonyme
+          cred = await signInAnonymously(auth);
+        }
+
+        // Sauvegarder le profil dans Firestore
+        if(cred && cred.user){
+          await setDoc(doc(db, 'users', cred.user.uid), {
+            nom, email, tel, date: Date.now()
+          }, { merge: true });
+        }
+        window.toast('🎉 Compte créé et synchronisé !');
+        // Le profil sera mis à jour automatiquement par le listener onSnapshot
+      } catch(e){
+        console.error('creerCompte', e);
+        window.toast('⚠️ '+(e.code==='auth/invalid-email'?'Email invalide':e.message||e.code));
+        // Fallback : sauvegarde locale
+        _creerCompte();
+      }
+    };
+  }
+
+  // ====== MODIFICATION DE PROFIL ======
+  const _enregistrerProfil = window.enregistrerProfil;
+  if(_enregistrerProfil){
+    window.enregistrerProfil = async function(){
+      const v = id => (document.getElementById(id).value||'').trim();
+      const data = { nom: v('mfNom'), email: v('mfMail'), tel: v('mfTel') };
+      if(auth.currentUser){
+        try {
+          await setDoc(doc(db, 'users', auth.currentUser.uid), data, { merge: true });
+          if(data.nom) await updateProfile(auth.currentUser, { displayName: data.nom });
+          window.toast('☁️ Profil synchronisé');
+          window.fermerModal && window.fermerModal();
+        } catch(e){
+          console.error(e);
+          _enregistrerProfil();
+        }
+      } else {
+        _enregistrerProfil();
+      }
+    };
+  }
+
+  // ====== DÉCONNEXION ======
+  const _deconnexion = window.deconnexion;
+  if(_deconnexion){
+    window.deconnexion = async function(){
+      if(!confirm('Vous déconnecter ?')) return;
+      try { await signOut(auth); } catch(e){}
+      window.state.user = null;
+      window.state.commandes = [];
+      window.save();
+      window.renderCompte && window.renderCompte();
+      window.renderCommandes && window.renderCommandes();
+      window.toast('👋 Déconnecté');
+    };
+  }
+
+  console.log('🔥 MALI SUGU connecté à Firebase mali-sugu-ed117 — TOUT en temps réel : produits, commandes, comptes, profils');
 });
 
 // =============================================================
