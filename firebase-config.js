@@ -167,40 +167,28 @@ whenReady(() => {
   });
 
   // ====== MONKEY-PATCH des fonctions write ======
+  // Délègue la validation au code original (qui a une bonne validation par champ)
+  // et ajoute la sync cloud après une publication locale réussie.
   const _publierProduit = window.publierProduit;
   if(_publierProduit){
     window.publierProduit = async function(){
-      const photo = document.getElementById('pPreview').dataset.photo || '';
-      const gps = document.getElementById('gpsInfo').dataset.gps || '';
-      const v = id => (document.getElementById(id).value||'').trim();
-      const p = {
-        date: Date.now(),
-        titre: v('pTitre'), cat: v('pCat'), prix: +v('pPrix'),
-        etat: v('pEtat'), photo, desc: v('pDesc'),
-        region: v('pRegion'), ville: v('pVille'), gps,
-        vendeur: v('pVendeur'), tel: v('pTel'), whatsapp: v('pWA')
-      };
-      if(!p.titre||!p.cat||!p.prix||!p.desc||!p.region||!p.vendeur||!p.tel){
-        window.toast('⚠️ Champs obligatoires manquants'); return;
-      }
-      if(!auth.currentUser){
-        try { await signInAnonymously(auth); } catch(e){ console.warn(e); }
-      }
-      try {
-        await window.CLOUD.publierProduit(p);
-        window.toast('☁️ Annonce publiée et synchronisée !');
-        document.querySelector('#page-vendre form').reset();
-        document.getElementById('pPreview').innerHTML='';
-        document.getElementById('pPreview').dataset.photo='';
-        document.getElementById('gpsInfo').textContent='';
-        document.getElementById('gpsInfo').dataset.gps='';
-        window.modal(`<h3>🎉 Annonce publiée et synchronisée !</h3>
-          <p>Votre annonce <strong>« ${p.titre} »</strong> est visible par tous les utilisateurs MALI SUGU (web + Android) en temps réel.</p>
-          <button class="btn" onclick="fermerModal();go('catalogue')">Voir le catalogue</button>`);
-      } catch(e){
-        console.error(e);
-        window.toast('⚠️ Erreur cloud, sauvegarde locale');
-        _publierProduit();
+      const before = (window.state.produits||[]).length;
+      // Appel de la fonction originale (validation + sauvegarde locale + modal de succès)
+      _publierProduit();
+      // Si l'item a bien été ajouté localement, on le pousse au cloud
+      const after = (window.state.produits||[]).length;
+      if(after > before){
+        const newItem = window.state.produits[after - 1];
+        try {
+          if(!auth.currentUser){
+            await signInAnonymously(auth);
+          }
+          await window.CLOUD.publierProduit(newItem);
+          // Le listener Firestore mettra à jour la liste avec le _cid automatiquement
+        } catch(e){
+          console.error('cloud publish', e);
+          window.toast('⚠️ Annonce locale (erreur cloud : '+(e.code||e.message||'inconnue')+')');
+        }
       }
     };
   }

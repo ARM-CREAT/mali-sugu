@@ -365,15 +365,15 @@ hr.s{border:0;border-top:1px solid var(--line);margin:14px 0}
 <section class="page" id="page-vendre">
   <div class="h-section"><h3>➕ Publier une annonce</h3></div>
   <div class="card">
-    <form onsubmit="event.preventDefault();publierProduit()">
+    <form onsubmit="event.preventDefault();publierProduit()" novalidate>
       <div class="form-row">
-        <div><label>Titre du produit *</label><input type="text" id="pTitre" required placeholder="Ex: Smartphone Samsung Galaxy"/></div>
-        <div><label>Catégorie *</label><select id="pCat" required></select></div>
+        <div><label>Titre du produit *</label><input type="text" id="pTitre" placeholder="Ex: Smartphone Samsung Galaxy"/></div>
+        <div><label>Catégorie *</label><select id="pCat"></select></div>
       </div>
       <div class="form-row">
-        <div><label>Prix (FCFA) *</label><input type="number" id="pPrix" required min="100" step="100" placeholder="Ex: 50000"/></div>
+        <div><label>Prix (FCFA) *</label><input type="number" id="pPrix" min="100" step="100" placeholder="Ex: 50000"/></div>
         <div><label>État *</label>
-          <select id="pEtat" required>
+          <select id="pEtat">
             <option value="neuf">Neuf</option>
             <option value="tres-bon">Très bon état</option>
             <option value="bon">Bon état</option>
@@ -385,9 +385,9 @@ hr.s{border:0;border-top:1px solid var(--line);margin:14px 0}
         <input type="file" id="pFile" accept="image/*" onchange="chargerPhotoProduit()"/>
         <div id="pPreview" style="margin-top:8px"></div>
       </div>
-      <div><label>Description *</label><textarea id="pDesc" required placeholder="Décrivez votre produit en détail..."></textarea></div>
+      <div><label>Description *</label><textarea id="pDesc" placeholder="Décrivez votre produit en détail..."></textarea></div>
       <div class="form-row">
-        <div><label>Région *</label><select id="pRegion" required></select></div>
+        <div><label>Région *</label><select id="pRegion"></select></div>
         <div><label>Ville / Commune</label><input type="text" id="pVille" placeholder="Ex: Bamako"/></div>
       </div>
       <div class="form-row">
@@ -397,10 +397,11 @@ hr.s{border:0;border-top:1px solid var(--line);margin:14px 0}
         </div>
       </div>
       <div class="form-row">
-        <div><label>Votre nom *</label><input type="text" id="pVendeur" required placeholder="Votre nom complet"/></div>
-        <div><label>Téléphone *</label><input type="tel" id="pTel" required placeholder="+223 XX XX XX XX"/></div>
+        <div><label>Votre nom *</label><input type="text" id="pVendeur" placeholder="Votre nom complet"/></div>
+        <div><label>Téléphone *</label><input type="tel" id="pTel" placeholder="+223 XX XX XX XX"/></div>
       </div>
       <div><label>WhatsApp (si différent du téléphone)</label><input type="tel" id="pWA" placeholder="+223 XX XX XX XX"/></div>
+      <p class="muted" style="font-size:12px;margin:6px 0">💡 Les champs marqués * sont obligatoires. Vos données sont sauvegardées automatiquement comme brouillon.</p>
       <button class="btn full gold" type="submit">📤 Publier mon annonce</button>
     </form>
   </div>
@@ -521,6 +522,10 @@ function go(p){
   window.scrollTo({top:0,behavior:'smooth'});
   if(location.hash !== '#'+p) history.replaceState(null,'','#'+p);
   renderAll();
+  // Restaurer le brouillon quand on entre sur Vendre
+  if(p === 'vendre'){
+    setTimeout(()=>{ try{ restaurerBrouillon && restaurerBrouillon(); }catch(e){} }, 50);
+  }
 }
 window.addEventListener('hashchange', ()=>{ const h=location.hash.slice(1); if(h && document.getElementById('page-'+h)) go(h); });
 
@@ -540,13 +545,28 @@ function renderCategories(){
       <div class="ic">${c.ic}</div>
       <div class="lab">${c.nom}</div>
     </div>`).join('');
-  // Populate selects
-  const optsCat = '<option value="">Toutes catégories</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.ic} ${c.nom}</option>`).join('');
-  const fc = document.getElementById('filterCat'); if(fc) fc.innerHTML = optsCat;
-  const pc = document.getElementById('pCat'); if(pc) pc.innerHTML = '<option value="">— Choisir —</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.ic} ${c.nom}</option>`).join('');
-  const optsRg = '<option value="">Toutes régions</option>'+REGIONS.map(r=>`<option>${r}</option>`).join('');
-  const fr = document.getElementById('filterRegion'); if(fr) fr.innerHTML = optsRg;
-  const pr = document.getElementById('pRegion'); if(pr) pr.innerHTML = '<option value="">— Choisir —</option>'+REGIONS.map(r=>`<option>${r}</option>`).join('');
+
+  // Helper qui peuple un <select> SANS écraser la valeur déjà choisie par l'utilisateur
+  function populateSelect(id, optionsHTML){
+    const el = document.getElementById(id);
+    if(!el) return;
+    // Si déjà peuplé avec les bonnes options, ne rien faire
+    if(el.dataset.populated === '1') return;
+    const currentValue = el.value;
+    el.innerHTML = optionsHTML;
+    if(currentValue) el.value = currentValue;
+    el.dataset.populated = '1';
+  }
+
+  const optsCatFilter = '<option value="">Toutes catégories</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.ic} ${c.nom}</option>`).join('');
+  const optsCatForm   = '<option value="">— Choisir —</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.ic} ${c.nom}</option>`).join('');
+  const optsRegFilter = '<option value="">Toutes régions</option>'+REGIONS.map(r=>`<option>${r}</option>`).join('');
+  const optsRegForm   = '<option value="">— Choisir —</option>'+REGIONS.map(r=>`<option>${r}</option>`).join('');
+
+  populateSelect('filterCat',    optsCatFilter);
+  populateSelect('pCat',         optsCatForm);
+  populateSelect('filterRegion', optsRegFilter);
+  populateSelect('pRegion',      optsRegForm);
 }
 
 function getCatIc(catId){ const c=CATEGORIES.find(x=>x.id===catId); return c?c.ic:'📦'; }
@@ -676,31 +696,91 @@ function recupererGPS(){
   }, { enableHighAccuracy:false, timeout:10000 });
 }
 
+/* Validation améliorée : indique EXACTEMENT le champ manquant + auto-focus + scroll */
+function validerChampVendre(id, libelle, isNumber){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  const v = (el.value||'').toString().trim();
+  if(!v || (isNumber && (+v <= 0))){
+    el.style.borderColor = '#ce1126';
+    el.style.boxShadow = '0 0 0 3px rgba(206,17,38,.18)';
+    el.focus();
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    setTimeout(()=>{ el.style.borderColor=''; el.style.boxShadow=''; }, 4000);
+    toast('⚠️ '+libelle+' : à remplir');
+    return null;
+  }
+  return v;
+}
+
 function publierProduit(){
+  // Validation par champ AVEC indication précise
+  const titre   = validerChampVendre('pTitre',   'Titre du produit'); if(!titre) return;
+  const cat     = validerChampVendre('pCat',     'Catégorie'); if(!cat) return;
+  const prix    = validerChampVendre('pPrix',    'Prix (FCFA)', true); if(!prix) return;
+  const etat    = validerChampVendre('pEtat',    'État du produit'); if(!etat) return;
+  const desc    = validerChampVendre('pDesc',    'Description'); if(!desc) return;
+  const region  = validerChampVendre('pRegion',  'Région'); if(!region) return;
+  const vendeur = validerChampVendre('pVendeur', 'Votre nom'); if(!vendeur) return;
+  const tel     = validerChampVendre('pTel',     'Téléphone'); if(!tel) return;
+
   const photo = document.getElementById('pPreview').dataset.photo || '';
   const gps = document.getElementById('gpsInfo').dataset.gps || '';
+  const ville = val('pVille');
+  const whatsapp = val('pWA');
+
   const p = {
-    id: 'P'+Date.now(),
-    date: Date.now(),
-    titre: val('pTitre'), cat: val('pCat'), prix: +val('pPrix'),
-    etat: val('pEtat'), photo, desc: val('pDesc'),
-    region: val('pRegion'), ville: val('pVille'), gps,
-    vendeur: val('pVendeur'), tel: val('pTel'), whatsapp: val('pWA')
+    id: 'P'+Date.now(), date: Date.now(),
+    titre, cat, prix:+prix, etat, photo, desc,
+    region, ville, gps, vendeur, tel, whatsapp
   };
-  if(!p.titre||!p.cat||!p.prix||!p.desc||!p.region||!p.vendeur||!p.tel){ toast('⚠️ Champs obligatoires manquants'); return; }
   state.produits.push(p); save();
   modal(`<h3>🎉 Annonce publiée !</h3>
     <p>Votre annonce <strong>« ${escape(p.titre)} »</strong> est maintenant visible dans le marché MALI SUGU.</p>
     <p>Les acheteurs peuvent vous contacter directement par téléphone, WhatsApp ou SMS.</p>
     <button class="btn" onclick="fermerModal();voirDetail('${p.id}')">Voir mon annonce</button>
     <button class="btn alt" onclick="fermerModal();go('vendre')">Publier une autre</button>`);
+  // Vider proprement le formulaire
   document.querySelector('#page-vendre form').reset();
   document.getElementById('pPreview').innerHTML='';
   document.getElementById('pPreview').dataset.photo='';
   document.getElementById('gpsInfo').textContent='';
   document.getElementById('gpsInfo').dataset.gps='';
+  // Vider le brouillon sauvegardé
+  localStorage.removeItem('malisugu_draft');
   renderAll();
 }
+
+/* Sauvegarde automatique du brouillon (anti-perte) */
+function sauvegarderBrouillon(){
+  const draft = {
+    titre: val('pTitre'), cat: val('pCat'), prix: val('pPrix'),
+    etat: val('pEtat'), desc: val('pDesc'), region: val('pRegion'),
+    ville: val('pVille'), vendeur: val('pVendeur'),
+    tel: val('pTel'), whatsapp: val('pWA')
+  };
+  if(Object.values(draft).some(v=>v)){
+    localStorage.setItem('malisugu_draft', JSON.stringify(draft));
+  }
+}
+function restaurerBrouillon(){
+  try{
+    const draft = JSON.parse(localStorage.getItem('malisugu_draft')||'{}');
+    if(!Object.values(draft).some(v=>v)) return;
+    const set = (id,v) => { const el = document.getElementById(id); if(el && v) el.value = v; };
+    set('pTitre', draft.titre); set('pCat', draft.cat); set('pPrix', draft.prix);
+    set('pEtat', draft.etat); set('pDesc', draft.desc); set('pRegion', draft.region);
+    set('pVille', draft.ville); set('pVendeur', draft.vendeur);
+    set('pTel', draft.tel); set('pWA', draft.whatsapp);
+  }catch(e){}
+}
+// Hook auto-save
+document.addEventListener('input', e=>{
+  if(e.target.closest && e.target.closest('#page-vendre')) sauvegarderBrouillon();
+});
+document.addEventListener('change', e=>{
+  if(e.target.closest && e.target.closest('#page-vendre')) sauvegarderBrouillon();
+});
 
 /* ==================== PANIER ==================== */
 function ajouterAuPanier(id){
