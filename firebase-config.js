@@ -66,15 +66,38 @@ window.CLOUD = {
   },
   logout: async () => signOut(auth),
 
-  // CRUD produits
+  // CRUD annonces — écrit avec le schéma mobile (compatible app Android)
   publierProduit: async (item) => {
-    const clean = JSON.parse(JSON.stringify(item));
-    delete clean._cid;
-    if(auth.currentUser) clean.userId = auth.currentUser.uid;
-    return (await addDoc(collection(db, 'produits'), clean)).id;
+    const sellerId = auth.currentUser ? auth.currentUser.uid : '';
+    // Document au format mobile (compatible avec l'app Android)
+    const doc = {
+      titre: item.titre || '',
+      categorie: item.cat || 'autre',
+      prix: String(item.prix || 0),
+      ville: item.ville || item.region || '',
+      imageUrl: item.photo || '',
+      status: 'disponible',
+      sellerd: sellerId,
+      searchekeywords: [
+        (item.titre||'').toLowerCase(),
+        (item.cat||'').toLowerCase(),
+        (item.ville||'').toLowerCase(),
+        (item.region||'').toLowerCase()
+      ].filter(Boolean),
+      createdAt: new Date(),
+      // Champs additionnels (web seulement, mobile les ignore)
+      description: item.desc || '',
+      region: item.region || '',
+      etat: item.etat || '',
+      vendeur: item.vendeur || '',
+      tel: item.tel || '',
+      whatsapp: item.whatsapp || '',
+      gps: item.gps || ''
+    };
+    return (await addDoc(collection(db, 'annonces'), doc)).id;
   },
-  supprimerProduit: async (cid) => deleteDoc(doc(db, 'produits', cid)),
-  modifierProduit: async (cid, patch) => updateDoc(doc(db, 'produits', cid), patch),
+  supprimerProduit: async (cid) => deleteDoc(doc(db, 'annonces', cid)),
+  modifierProduit: async (cid, patch) => updateDoc(doc(db, 'annonces', cid), patch),
 
   // CRUD commandes
   passerCommande: async (cmd) => {
@@ -109,17 +132,87 @@ function whenReady(fn){
 whenReady(() => {
   indic('☁️ Cloud actif');
 
-  // ====== ÉCOUTE TEMPS RÉEL : PRODUITS (visible par tous) ======
-  onSnapshot(collection(db, 'produits'), snap => {
+  // ====== HELPERS DE CONVERSION (schéma mobile ↔ schéma web) ======
+
+  // Convertit une URL gs:// (Firebase Storage) en URL https publique
+  function gsToHttps(gsUrl){
+    if(!gsUrl || typeof gsUrl !== 'string') return '';
+    if(gsUrl.startsWith('http')) return gsUrl;
+    if(gsUrl.startsWith('gs://')){
+      const m = gsUrl.match(/^gs:\/\/([^/]+)\/(.+)$/);
+      if(m){
+        const bucket = m[1], path = m[2];
+        return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media`;
+      }
+    }
+    return gsUrl;
+  }
+
+  // Convertit un document mobile en format web pour affichage
+  function mobileToWeb(doc, cid){
+    const d = doc || {};
+    let dateMs = Date.now();
+    if(d.createdAt){
+      if(d.createdAt.toMillis) dateMs = d.createdAt.toMillis();
+      else if(typeof d.createdAt === 'number') dateMs = d.createdAt;
+      else if(d.createdAt.seconds) dateMs = d.createdAt.seconds * 1000;
+    } else if(d.date){
+      dateMs = d.date;
+    }
+    return {
+      _cid: cid,
+      id: cid,
+      // Champs principaux (mapping mobile → web)
+      titre:   d.titre || d.title || '',
+      cat:     d.categorie || d.category || d.cat || 'autre',
+      prix:    parseFloat(d.prix || d.price || 0) || 0,
+      photo:   gsToHttps(d.imageUrl || d.photo || d.image || ''),
+      ville:   d.ville || d.city || d.location || '',
+      desc:    d.description || d.desc || d.descripcion || d.titre || '',
+      region:  d.region || d.area || '',
+      etat:    d.etat || d.condition || d.status === 'disponible' ? (d.etat || 'bon') : (d.etat || 'bon'),
+      vendeur: d.vendeur || d.seller || d.sellerName || '',
+      tel:     d.tel || d.phone || d.telephone || '',
+      whatsapp: d.whatsapp || d.wa || '',
+      sellerId: d.sellerd || d.sellerId || d.userId || '',
+      status:  d.status || 'disponible',
+      gps:     d.gps || '',
+      date:    dateMs,
+      // Garder les champs originaux pour ne rien perdre
+      _raw: d
+    };
+  }
+
+  // ====== ÉCOUTE TEMPS RÉEL : ANNONCES (mobile + web) ======
+  onSnapshot(collection(db, 'annonces'), snap => {
     const arr = [];
-    snap.forEach(d => arr.push({ ...d.data(), _cid: d.id, id: d.id }));
+    snap.forEach(d => arr.push(mobileToWeb(d.data(), d.id)));
     arr.sort((a,b) => (b.date||0) - (a.date||0));
     if(arr.length > 0 || window.firstSync){
       window.state.produits = arr;
       window.renderAll();
     }
     window.firstSync = true;
-  }, e => console.warn('listen produits', e));
+  }, e => console.warn('listen annonces', e));
+
+  // Cache des profils vendeurs pour résoudre les noms
+  const sellerCache = {};
+  async function resolveSeller(sellerId){
+    if(!sellerId || sellerCache[sellerId]) return sellerCache[sellerId] || {};
+    try {
+      const snap = await getDoc(doc(db, 'users', sellerId));
+      const data = snap.data() || {};
+      sellerCache[sellerId] = {
+        nom: data.nom || data.name || data.displayName || 'Vendeur',
+        tel: data.tel || data.phone || data.telephone || '',
+        whatsapp: data.whatsapp || data.wa || ''
+      };
+    } catch(e){ sellerCache[sellerId] = {}; }
+    return sellerCache[sellerId];
+  }
+  // Rendre disponible globalement pour usage dans index.html
+  window.resolveSeller = resolveSeller;
+  window.gsToHttps = gsToHttps;
 
   // ====== AUTH STATE & SYNC PROFIL ======
   let unsubProfile=null, unsubCommandes=null;
