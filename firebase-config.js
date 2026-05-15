@@ -166,7 +166,9 @@ whenReady(() => {
       titre:   d.titre || d.title || '',
       cat:     d.categorie || d.category || d.cat || 'autre',
       prix:    parseFloat(d.prix || d.price || 0) || 0,
-      photo:   gsToHttps(d.imageUrl || d.photo || d.image || ''),
+      // imageUrl peut être un tableau (app Android) ou une chaîne (web)
+      photo:   gsToHttps(Array.isArray(d.imageUrl) ? (d.imageUrl[0]||'') : (d.imageUrl || d.photo || d.image || '')),
+      photos:  Array.isArray(d.imageUrl) ? d.imageUrl.map(gsToHttps) : (d.imageUrl ? [gsToHttps(d.imageUrl)] : []),
       ville:   d.ville || d.city || d.location || '',
       desc:    d.description || d.desc || d.descripcion || d.titre || '',
       region:  d.region || d.area || '',
@@ -449,7 +451,7 @@ whenReady(() => {
 });
 
 // =============================================================
-// RÈGLES FIRESTORE À PUBLIER
+// RÈGLES FIRESTORE À PUBLIER (web + app Android Mali Sugu)
 // =============================================================
 // Console Firebase → Firestore Database → Règles → coller ceci :
 //
@@ -457,30 +459,49 @@ whenReady(() => {
 // service cloud.firestore {
 //   match /databases/{database}/documents {
 //
-//     // Collection principale des annonces (utilisée par le web ET l'app Android)
+//     // Annonces (catalogue partagé web + Android)
 //     match /annonces/{docId} {
-//       allow read: if true;                           // Lecture publique (catalogue visible sans compte)
-//       allow create: if request.auth != null;         // Création : utilisateur connecté (anonyme OK)
-//       allow update, delete: if request.auth != null  // Modification/suppression : propriétaire uniquement
+//       allow read: if true;
+//       allow create: if request.auth != null;
+//       allow update, delete: if request.auth != null
 //                          && request.auth.uid == resource.data.sellerd;
 //     }
 //
 //     // Profils utilisateurs
 //     match /users/{userId} {
-//       allow read: if true;                           // Lecture publique (résolution nom vendeur)
-//       allow write: if request.auth != null           // Écriture : seulement son propre profil
+//       allow read: if true;
+//       allow write: if request.auth != null
 //                 && request.auth.uid == userId;
 //     }
 //
 //     // Commandes
 //     match /commandes/{docId} {
-//       allow read, create: if request.auth != null;   // Lecture et création : connecté
-//       allow update: if request.auth != null;         // Mise à jour statut : connecté
+//       allow read: if request.auth != null
+//                && (request.auth.uid == resource.data.acheteurId
+//                ||  request.auth.uid == resource.data.vendeurId);
+//       allow create: if request.auth != null;
+//       allow update: if request.auth != null
+//                  && (request.auth.uid == resource.data.acheteurId
+//                  ||  request.auth.uid == resource.data.vendeurId);
 //     }
 //
-//     // Messages acheteur/vendeur
+//     // Conversations (app Android)
+//     match /chats/{chatId} {
+//       allow read, write: if request.auth != null
+//                       && request.auth.uid in resource.data.participants;
+//       allow create: if request.auth != null;
+//     }
+//
+//     // Messages dans les conversations
 //     match /messages/{docId} {
 //       allow read, create: if request.auth != null;
+//     }
+//
+//     // Favoris
+//     match /favoris/{docId} {
+//       allow read, write: if request.auth != null
+//                       && request.auth.uid == resource.data.uid;
+//       allow create: if request.auth != null;
 //     }
 //
 //     // Avis / notations
@@ -488,12 +509,17 @@ whenReady(() => {
 //       allow read: if true;
 //       allow create: if request.auth != null;
 //     }
+//
+//     // Notifications
+//     match /notifications/{docId} {
+//       allow read, write: if request.auth != null
+//                       && request.auth.uid == resource.data.uid;
+//       allow create: if request.auth != null;
+//     }
 //   }
 // }
 // =============================================================
 //
-// ⚠️  ATTENTION : la collection s'appelle "annonces" (pas "produits").
-//      Le champ propriétaire s'appelle "sellerd" (pas "userId").
-//      L'auth anonyme DOIT être activée dans :
-//      Firebase Console → Authentication → Sign-in method → Anonyme.
+// ⚠️  Auth anonyme activée : Firebase Console → Authentication
+//      → Sign-in method → Anonyme → Activer
 // =============================================================
