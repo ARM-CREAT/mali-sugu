@@ -1006,17 +1006,9 @@ function pingIndexNow(urls){
     const ping = `https://api.indexnow.org/IndexNow?url=${encodeURIComponent(u)}&key=${INDEXNOW_KEY}&keyLocation=${encodeURIComponent(SITE_URL+'/'+INDEXNOW_KEY+'.txt')}`;
     try{ fetch(ping, { mode:'no-cors' }); }catch(e){}
   });
-  try{
-    fetch('https://api.indexnow.org/IndexNow', {
-      method:'POST', mode:'no-cors',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        host: 'mali-sugu.vercel.app', key: INDEXNOW_KEY,
-        keyLocation: SITE_URL+'/'+INDEXNOW_KEY+'.txt',
-        urlList: urls
-      })
-    });
-  }catch(e){}
+  // POST batch supprimé : avec mode:'no-cors', Content-Type:application/json est
+  // un header "non-simple" → le navigateur le retire → serveur répond 415.
+  // Les GETs individuels ci-dessus suffisent pour notifier IndexNow.
   console.log('🔍 IndexNow ping pour', urls);
 }
 

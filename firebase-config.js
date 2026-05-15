@@ -259,30 +259,58 @@ whenReady(() => {
     }
   });
 
-  // ====== MONKEY-PATCH des fonctions write ======
-  // Délègue la validation au code original (qui a une bonne validation par champ)
-  // et ajoute la sync cloud après une publication locale réussie.
+  // ====== MONKEY-PATCH avec DIAGNOSTIC complet ======
   const _publierProduit = window.publierProduit;
   if(_publierProduit){
     window.publierProduit = async function(){
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🟡 [Étape 0] Bouton "Publier" cliqué');
+
       const before = (window.state.produits||[]).length;
-      // Appel de la fonction originale (validation + sauvegarde locale + modal de succès)
+      console.log('🟡 [Étape 1] Validation locale et sauvegarde...');
       _publierProduit();
-      // Si l'item a bien été ajouté localement, on le pousse au cloud
+
       const after = (window.state.produits||[]).length;
-      if(after > before){
-        const newItem = window.state.produits[after - 1];
+      if(after <= before){
+        console.log('🔴 [Étape 1 ÉCHEC] Validation locale échouée — l\'item n\'a pas été ajouté.');
+        console.log('💡 Vérifiez que tous les champs obligatoires sont remplis.');
+        return;
+      }
+
+      const newItem = window.state.produits[after - 1];
+      console.log('🟢 [Étape 1 OK] Item ajouté localement :', newItem);
+
+      // Étape 2 : authentification
+      console.log('🟡 [Étape 2] Connexion anonyme à Firebase...');
+      if(!auth.currentUser){
         try {
-          if(!auth.currentUser){
-            await signInAnonymously(auth);
-          }
-          await window.CLOUD.publierProduit(newItem);
-          // Le listener Firestore mettra à jour la liste avec le _cid automatiquement
+          const cred = await signInAnonymously(auth);
+          console.log('🟢 [Étape 2 OK] Connecté anonymement, UID :', cred.user.uid);
         } catch(e){
-          console.error('cloud publish', e);
-          window.toast('⚠️ Annonce locale (erreur cloud : '+(e.code||e.message||'inconnue')+')');
+          console.error('🔴 [Étape 2 ÉCHEC] Auth anonyme refusée :', e.code, e.message);
+          window.toast('❌ Auth anonyme bloquée : '+e.code+'. Activez "Anonymous" dans Firebase Console > Authentication > Sign-in method');
+          return;
+        }
+      } else {
+        console.log('🟢 [Étape 2 OK] Déjà connecté, UID :', auth.currentUser.uid);
+      }
+
+      // Étape 3 : écriture cloud
+      console.log('🟡 [Étape 3] Écriture du document dans Firestore (collection "annonces")...');
+      try {
+        const docId = await window.CLOUD.publierProduit(newItem);
+        console.log('🟢 [Étape 3 OK] Document créé dans Firestore avec ID :', docId);
+        console.log('🎉 SUCCÈS ! L\'annonce est maintenant visible sur tous les appareils.');
+        window.toast('☁️ Annonce synchronisée avec le cloud ! ID: '+docId.slice(0,8));
+      } catch(e){
+        console.error('🔴 [Étape 3 ÉCHEC] Écriture refusée :', e.code, e.message);
+        if(e.code === 'permission-denied'){
+          window.toast('❌ Règles Firestore bloquent l\'écriture. Vérifiez les rules pour /annonces');
+        } else {
+          window.toast('❌ Cloud erreur : '+e.code+' — '+(e.message||'').slice(0,80));
         }
       }
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     };
   }
 
@@ -428,26 +456,44 @@ whenReady(() => {
 // rules_version = '2';
 // service cloud.firestore {
 //   match /databases/{database}/documents {
-//     match /produits/{doc} {
-//       allow read: if true;
-//       allow create: if request.auth != null;
-//       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+//
+//     // Collection principale des annonces (utilisée par le web ET l'app Android)
+//     match /annonces/{docId} {
+//       allow read: if true;                           // Lecture publique (catalogue visible sans compte)
+//       allow create: if request.auth != null;         // Création : utilisateur connecté (anonyme OK)
+//       allow update, delete: if request.auth != null  // Modification/suppression : propriétaire uniquement
+//                          && request.auth.uid == resource.data.sellerd;
 //     }
-//     match /users/{doc} {
-//       allow read: if true;
-//       allow write: if request.auth != null && request.auth.uid == doc;
+//
+//     // Profils utilisateurs
+//     match /users/{userId} {
+//       allow read: if true;                           // Lecture publique (résolution nom vendeur)
+//       allow write: if request.auth != null           // Écriture : seulement son propre profil
+//                 && request.auth.uid == userId;
 //     }
-//     match /commandes/{doc} {
+//
+//     // Commandes
+//     match /commandes/{docId} {
+//       allow read, create: if request.auth != null;   // Lecture et création : connecté
+//       allow update: if request.auth != null;         // Mise à jour statut : connecté
+//     }
+//
+//     // Messages acheteur/vendeur
+//     match /messages/{docId} {
 //       allow read, create: if request.auth != null;
-//       allow update: if request.auth != null;
 //     }
-//     match /messages/{doc} {
-//       allow read, create: if request.auth != null;
-//     }
-//     match /avis/{doc} {
+//
+//     // Avis / notations
+//     match /avis/{docId} {
 //       allow read: if true;
 //       allow create: if request.auth != null;
 //     }
 //   }
 // }
+// =============================================================
+//
+// ⚠️  ATTENTION : la collection s'appelle "annonces" (pas "produits").
+//      Le champ propriétaire s'appelle "sellerd" (pas "userId").
+//      L'auth anonyme DOIT être activée dans :
+//      Firebase Console → Authentication → Sign-in method → Anonyme.
 // =============================================================
