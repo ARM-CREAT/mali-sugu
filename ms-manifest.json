@@ -1,0 +1,45 @@
+{
+  "name": "MALI SUGU — Marché en ligne du Mali",
+  "short_name": "MALI SUGU",
+  "description": "Achetez et vendez près de chez vous au Mali. Marketplace de proximité avec Orange Money, Moov Money, livraison et contact direct vendeur.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14a44d",
+  "theme_color": "#14a44d",
+  "lang": "fr",
+  "categories": ["shopping", "business", "finance"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Publier une annonce",
+      "url": "/#vendre",
+      "description": "Vendre un article sur MALI SUGU"
+    },
+    {
+      "name": "Explorer le marché",
+      "url": "/#catalogue",
+      "description": "Voir toutes les annonces"
+    },
+    {
+      "name": "Mon compte",
+      "url": "/#compte",
+      "description": "Accéder à mon compte"
+    }
+  ],
+  "prefer_related_applications": false
+}
