@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bouadiakite.malisugu",
+      "sha256_cert_fingerprints": [
+        "39:6E:D0:FB:58:51:F3:8E:12:86:77:39:26:D3:3A:C8:01:94:5C:1B:1F:BA:57:D3:8C:FD:62:92:D8:4F:9E:B1"
+      ]
+    }
+  }
+]
