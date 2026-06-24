@@ -14,22 +14,22 @@
     icon.title = 'Administration';
     icon.style.cssText = [
       'position: fixed',
-      'bottom: 8px',
-      'right: 8px',
-      'width: 22px',
-      'height: 22px',
-      'background: rgba(20, 164, 77, 0.15)',
+      'bottom: 12px',
+      'left: 12px',
+      'width: 26px',
+      'height: 26px',
+      'background: rgba(20, 164, 77, 0.25)',
       'color: #14a44d',
       'border-radius: 50%',
       'display: flex',
       'align-items: center',
       'justify-content: center',
-      'font-size: 11px',
+      'font-size: 13px',
       'text-decoration: none',
-      'z-index: 100',
-      'opacity: 0.3',
+      'z-index: 9999',
+      'opacity: 0.5',
       'transition: opacity 0.3s, background 0.3s',
-      'border: 1px solid rgba(20, 164, 77, 0.2)'
+      'border: 1px solid rgba(20, 164, 77, 0.4)'
     ].join(';');
 
     icon.innerHTML = '⚙';
@@ -41,8 +41,8 @@
       icon.style.color = '#fff';
     });
     icon.addEventListener('mouseleave', function () {
-      icon.style.opacity = '0.3';
-      icon.style.background = 'rgba(20, 164, 77, 0.15)';
+      icon.style.opacity = '0.5';
+      icon.style.background = 'rgba(20, 164, 77, 0.25)';
       icon.style.color = '#14a44d';
     });
 
