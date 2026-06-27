@@ -118,7 +118,7 @@ function indic(text, color='#14a44d'){
   if(!el){
     el = document.createElement('div');
     el.id = 'cloudIndic';
-    el.style.cssText = 'position:fixed;top:42px;right:6px;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;z-index:1000;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.2);font-family:sans-serif';
+    el.style.cssText = 'display:none';
     document.body.appendChild(el);
   }
   el.style.background = color; el.textContent = text;
