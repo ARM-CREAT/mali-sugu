@@ -825,7 +825,9 @@ function totalPanier(){ return state.panier.reduce((s,it)=>{ const p=state.produ
 function updateCartBadge(){ const b=document.getElementById('cartBadge'); const n=state.panier.reduce((s,it)=>s+it.qty,0); if(n>0){ b.textContent=n; b.style.display='inline-block'; } else b.style.display='none'; }
 
 function renderPanier(){
-  document.getElementById('panierCount').textContent = state.panier.reduce((s,it)=>s+it.qty,0)+' article'+(state.panier.length>1?'s':'');
+  const panierCountEl = document.getElementById('panierCount');
+  if(!panierCountEl) return; // DOM pas encore prêt, on ressaie plus tard
+  panierCountEl.textContent = state.panier.reduce((s,it)=>s+it.qty,0)+' article'+(state.panier.length>1?'s':'');
   const c = document.getElementById('panierContent');
   if(!state.panier.length){
     c.innerHTML = '<div class="empty"><div class="ic">🛒</div><p>Votre panier est vide.</p><button class="btn" onclick="go(\'catalogue\')">🛍️ Voir le marché</button></div>';
