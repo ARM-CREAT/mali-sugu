@@ -576,15 +576,28 @@ function getCatNom(catId){ const c=CATEGORIES.find(x=>x.id===catId); return c?c.
 
 function renderProductCard(p){
   const isNew = (Date.now()-p.date) < 48*3600*1000;
+  // CORRECTIF PHOTO : lire toutes les sources possibles (site web + app mobile Firebase)
+  var imgSrc = p.photo || p.image || '';
+  if(!imgSrc && p.imageUrl){
+    imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl;
+  }
+  if(!imgSrc && p.photos_urls){
+    imgSrc = String(p.photos_urls).split('|')[0];
+  }
+  // Convertir gs:// (Firebase Storage) en URL http lisible par <img>
+  if(imgSrc && imgSrc.indexOf('gs://')===0){
+    var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
+    if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
+  }
   return `<div class="product" onclick="voirDetail('${p.id}')">
-    <div class="img" style="${p.photo?`background-image:url(${p.photo})`:''}">
-      ${!p.photo?getCatIc(p.cat):''}
+    <div class="img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">
+      ${!imgSrc?getCatIc(p.cat):''}
       ${isNew?'<span class="new">NOUVEAU</span>':''}
     </div>
     <div class="info">
       <h4>${escape(p.titre)}</h4>
       <div class="price">${fmtPrix(p.prix)}</div>
-      <div class="seller">📍 ${escape(p.region||'')} ${p.ville?'· '+escape(p.ville):''}</div>
+      <div class="seller">📍 ${escape(p.region||p.ville||'')} ${p.ville&&p.region?'· '+escape(p.ville):''}</div>
       <div class="meta">
         <span>${getCatIc(p.cat)} ${getCatNom(p.cat)}</span>
         <span>${fmtDate(p.date)}</span>
@@ -634,9 +647,17 @@ function filtrerCategorie(catId){
 function voirDetail(id){
   const p = state.produits.find(x=>x.id===id); if(!p) return;
   const waNum = (p.whatsapp||p.tel||'').replace(/[^0-9]/g,'');
+  // CORRECTIF PHOTO (idem que renderProductCard)
+  var imgSrc = p.photo || p.image || '';
+  if(!imgSrc && p.imageUrl) imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl;
+  if(!imgSrc && p.photos_urls) imgSrc = String(p.photos_urls).split('|')[0];
+  if(imgSrc && imgSrc.indexOf('gs://')===0){
+    var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
+    if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
+  }
   document.getElementById('detailContent').innerHTML = `
     <div class="card product-detail">
-      <div class="detail-img" style="${p.photo?`background-image:url(${p.photo})`:''}">${!p.photo?getCatIc(p.cat):''}</div>
+      <div class="detail-img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">${!imgSrc?getCatIc(p.cat):''}</div>
       <div>
         <span style="background:#f1faf3;color:var(--vert-d);padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">${getCatIc(p.cat)} ${getCatNom(p.cat)}</span>
         <h2 style="margin:8px 0;color:var(--vert-d)">${escape(p.titre)}</h2>
@@ -814,8 +835,16 @@ function renderPanier(){
   state.panier.forEach(it=>{
     const p = state.produits.find(x=>x.id===it.id);
     if(!p){ return; }
+    // CORRECTIF PHOTO
+    var imgSrc = p.photo || p.image || '';
+    if(!imgSrc && p.imageUrl) imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl;
+    if(!imgSrc && p.photos_urls) imgSrc = String(p.photos_urls).split('|')[0];
+    if(imgSrc && imgSrc.indexOf('gs://')===0){
+      var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
+      if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
+    }
     html += `<div class="cart-item">
-      <div class="img" style="${p.photo?`background-image:url(${p.photo})`:''}">${!p.photo?getCatIc(p.cat):''}</div>
+      <div class="img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">${!imgSrc?getCatIc(p.cat):''}</div>
       <div class="info"><h5>${escape(p.titre)}</h5><div class="muted" style="font-size:12px">${fmtPrix(p.prix)} × ${it.qty}</div></div>
       <div class="qty">
         <button onclick="modifierQty('${p.id}',-1)">−</button>
@@ -1008,9 +1037,6 @@ function pingIndexNow(urls){
     const ping = `https://api.indexnow.org/IndexNow?url=${encodeURIComponent(u)}&key=${INDEXNOW_KEY}&keyLocation=${encodeURIComponent(SITE_URL+'/'+INDEXNOW_KEY+'.txt')}`;
     try{ fetch(ping, { mode:'no-cors' }); }catch(e){}
   });
-  // POST batch supprimé : avec mode:'no-cors', Content-Type:application/json est
-  // un header "non-simple" → le navigateur le retire → serveur répond 415.
-  // Les GETs individuels ci-dessus suffisent pour notifier IndexNow.
   console.log('🔍 IndexNow ping pour', urls);
 }
 
@@ -1153,6 +1179,25 @@ init();
 
 <!-- Branchement Firebase (sync temps réel multi-appareils) -->
 <script type="module" src="firebase-config.js"></script>
+
+<!-- SDK Firebase compat (permet à mes modules d'utiliser firebase.firestore()) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script>
+  // Initialise l'app "compat" avec la MÊME config que firebase-config.js (mali-sugu-ed117)
+  if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyAwoMG6EiciOTBawqMN4p-A-20BJHf4v3U",
+      authDomain: "mali-sugu-ed117.firebaseapp.com",
+      projectId: "mali-sugu-ed117",
+      storageBucket: "mali-sugu-ed117.firebasestorage.app",
+      messagingSenderId: "583727735875",
+      appId: "1:583727735875:web:7c9143aa2b04b8137fa0f6"
+    });
+  }
+</script>
 <script src="/ms-infinite-scroll.js" defer></script>
 <script src="/ms-paiement.js" defer></script>
  <script src="/ms-auth.js" defer></script>
