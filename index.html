@@ -576,15 +576,23 @@ function getCatNom(catId){ const c=CATEGORIES.find(x=>x.id===catId); return c?c.
 
 function renderProductCard(p){
   const isNew = (Date.now()-p.date) < 48*3600*1000;
+  // Lit la photo depuis toutes les sources possibles (web + mobile Firebase)
+  var imgSrc = p.photo || p.image || '';
+  if(!imgSrc && p.imageUrl){ imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl; }
+  if(!imgSrc && p.photos_urls){ imgSrc = String(p.photos_urls).split('|')[0]; }
+  if(imgSrc && imgSrc.indexOf('gs://')===0){
+    var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
+    if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
+  }
   return `<div class="product" onclick="voirDetail('${p.id}')">
-    <div class="img" style="${p.photo?`background-image:url(${p.photo})`:''}">
-      ${!p.photo?getCatIc(p.cat):''}
+    <div class="img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">
+      ${!imgSrc?getCatIc(p.cat):''}
       ${isNew?'<span class="new">NOUVEAU</span>':''}
     </div>
     <div class="info">
       <h4>${escape(p.titre)}</h4>
       <div class="price">${fmtPrix(p.prix)}</div>
-      <div class="seller">📍 ${escape(p.region||'')} ${p.ville?'· '+escape(p.ville):''}</div>
+      <div class="seller">📍 ${escape(p.region||p.ville||'')} ${p.ville&&p.region?'· '+escape(p.ville):''}</div>
       <div class="meta">
         <span>${getCatIc(p.cat)} ${getCatNom(p.cat)}</span>
         <span>${fmtDate(p.date)}</span>
@@ -594,15 +602,22 @@ function renderProductCard(p){
 }
 
 function renderAccueil(){
+  const latestEl = document.getElementById('latestProducts');
+  const countEl = document.getElementById('prodCount');
+  if(!latestEl || !countEl) return;
   const recents = [...state.produits].sort((a,b)=>b.date-a.date).slice(0,8);
-  document.getElementById('latestProducts').innerHTML = recents.length
+  latestEl.innerHTML = recents.length
     ? recents.map(renderProductCard).join('')
     : '<div class="empty"><div class="ic">🛒</div><p>Soyez le premier à publier une annonce !</p><button class="btn gold" onclick="go(\'vendre\')">➕ Publier maintenant</button></div>';
-  document.getElementById('prodCount').textContent = state.produits.length+' produit'+(state.produits.length>1?'s':'');
+  countEl.textContent = state.produits.length+' produit'+(state.produits.length>1?'s':'');
 }
 
 function renderCatalog(){
-  const cat = document.getElementById('filterCat').value;
+  const filterCatEl = document.getElementById('filterCat');
+  const catalogEl = document.getElementById('catalogProducts');
+  const catalogCountEl = document.getElementById('catalogCount');
+  if(!filterCatEl || !catalogEl || !catalogCountEl) return;
+  const cat = filterCatEl.value;
   const reg = document.getElementById('filterRegion').value;
   const prc = document.getElementById('filterPrice').value;
   const sort = document.getElementById('filterSort').value;
@@ -618,7 +633,7 @@ function renderCatalog(){
   document.getElementById('catalogProducts').innerHTML = list.length
     ? list.map(renderProductCard).join('')
     : '<div class="empty"><div class="ic">🔍</div><p>Aucun produit ne correspond à vos critères.</p></div>';
-  document.getElementById('catalogCount').textContent = list.length+' résultat'+(list.length>1?'s':'');
+  catalogCountEl.textContent = list.length+' résultat'+(list.length>1?'s':'');
 }
 
 function rechercher(){
@@ -634,9 +649,16 @@ function filtrerCategorie(catId){
 function voirDetail(id){
   const p = state.produits.find(x=>x.id===id); if(!p) return;
   const waNum = (p.whatsapp||p.tel||'').replace(/[^0-9]/g,'');
+  var imgSrc = p.photo || p.image || '';
+  if(!imgSrc && p.imageUrl){ imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl; }
+  if(!imgSrc && p.photos_urls){ imgSrc = String(p.photos_urls).split('|')[0]; }
+  if(imgSrc && imgSrc.indexOf('gs://')===0){
+    var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
+    if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
+  }
   document.getElementById('detailContent').innerHTML = `
     <div class="card product-detail">
-      <div class="detail-img" style="${p.photo?`background-image:url(${p.photo})`:''}">${!p.photo?getCatIc(p.cat):''}</div>
+      <div class="detail-img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">${!imgSrc?getCatIc(p.cat):''}</div>
       <div>
         <span style="background:#f1faf3;color:var(--vert-d);padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">${getCatIc(p.cat)} ${getCatNom(p.cat)}</span>
         <h2 style="margin:8px 0;color:var(--vert-d)">${escape(p.titre)}</h2>
@@ -804,7 +826,9 @@ function totalPanier(){ return state.panier.reduce((s,it)=>{ const p=state.produ
 function updateCartBadge(){ const b=document.getElementById('cartBadge'); const n=state.panier.reduce((s,it)=>s+it.qty,0); if(n>0){ b.textContent=n; b.style.display='inline-block'; } else b.style.display='none'; }
 
 function renderPanier(){
-  document.getElementById('panierCount').textContent = state.panier.reduce((s,it)=>s+it.qty,0)+' article'+(state.panier.length>1?'s':'');
+  const panierCountEl = document.getElementById('panierCount');
+  if(!panierCountEl) return;
+  panierCountEl.textContent = state.panier.reduce((s,it)=>s+it.qty,0)+' article'+(state.panier.length>1?'s':'');
   const c = document.getElementById('panierContent');
   if(!state.panier.length){
     c.innerHTML = '<div class="empty"><div class="ic">🛒</div><p>Votre panier est vide.</p><button class="btn" onclick="go(\'catalogue\')">🛍️ Voir le marché</button></div>';
@@ -839,12 +863,14 @@ function renderPanier(){
 
 /* ==================== CHECKOUT ==================== */
 function renderCheckout(){
+  const checkoutEl = document.getElementById('checkoutContent');
+  if(!checkoutEl) return;
   if(!state.panier.length){
-    document.getElementById('checkoutContent').innerHTML = '<div class="empty"><div class="ic">🛒</div><p>Panier vide</p><button class="btn" onclick="go(\'catalogue\')">Voir le marché</button></div>';
+    checkoutEl.innerHTML = '<div class="empty"><div class="ic">🛒</div><p>Panier vide</p><button class="btn" onclick="go(\'catalogue\')">Voir le marché</button></div>';
     return;
   }
   const total = totalPanier();
-  document.getElementById('checkoutContent').innerHTML = `
+  checkoutEl.innerHTML = `
     <div class="card">
       <h4>📋 Récapitulatif</h4>
       ${state.panier.map(it=>{ const p=state.produits.find(x=>x.id===it.id); return p?`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${escape(p.titre)} × ${it.qty}</span><span class="right" style="font-weight:700">${fmtPrix(p.prix*it.qty)}</span></div>`:''; }).join('')}
@@ -907,6 +933,7 @@ function confirmerCommande(){
 /* ==================== COMPTE ==================== */
 function renderCompte(){
   const c = document.getElementById('compteContent');
+  if(!c) return;
   if(state.user){
     c.innerHTML = `
       <div class="card">
@@ -977,6 +1004,7 @@ function supprimerAnnonce(id){
 /* ==================== COMMANDES ==================== */
 function renderCommandes(){
   const c = document.getElementById('commandesContent');
+  if(!c) return;
   if(!state.commandes.length){
     c.innerHTML = '<div class="empty"><div class="ic">📦</div><p>Aucune commande pour le moment.</p><button class="btn" onclick="go(\'catalogue\')">🛍️ Voir le marché</button></div>';
     return;
