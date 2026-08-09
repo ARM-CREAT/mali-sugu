@@ -234,15 +234,6 @@
         photoInput.files = dt.files;
       }
 
-      // CORRECTIF : le formulaire d'origine (index.html) lit la photo depuis
-      // #pPreview.dataset.photo — ce module la capturait mais ne le remplissait
-      // jamais, donc publierProduit() enregistrait photo:'' (image invisible).
-      var pPreviewEl = document.getElementById('pPreview');
-      if (pPreviewEl) {
-        var premierePhoto = photos.length > 0 ? (photos[0].url || photos[0].dataUrl || '') : '';
-        pPreviewEl.dataset.photo = premierePhoto;
-      }
-
       // Boutons supprimer
       previewsEl.querySelectorAll('.ms-cam-preview-remove').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
