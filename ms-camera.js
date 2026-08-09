@@ -234,6 +234,15 @@
         photoInput.files = dt.files;
       }
 
+      // Alimente aussi le champ que le formulaire d'origine (index.html) lit
+      // au moment de publier (#pPreview.dataset.photo), sinon la photo est
+      // capturée mais jamais transmise à publierProduit().
+      var pPreviewEl = document.getElementById('pPreview');
+      if (pPreviewEl) {
+        var premierePhoto = photos.length > 0 ? (photos[0].url || photos[0].dataUrl || '') : '';
+        pPreviewEl.dataset.photo = premierePhoto;
+      }
+
       // Boutons supprimer
       previewsEl.querySelectorAll('.ms-cam-preview-remove').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
