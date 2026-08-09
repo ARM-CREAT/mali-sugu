@@ -607,15 +607,22 @@ function renderProductCard(p){
 }
 
 function renderAccueil(){
+  const latestEl = document.getElementById('latestProducts');
+  const countEl = document.getElementById('prodCount');
+  if(!latestEl || !countEl) return; // DOM pas encore prêt
   const recents = [...state.produits].sort((a,b)=>b.date-a.date).slice(0,8);
-  document.getElementById('latestProducts').innerHTML = recents.length
+  latestEl.innerHTML = recents.length
     ? recents.map(renderProductCard).join('')
     : '<div class="empty"><div class="ic">🛒</div><p>Soyez le premier à publier une annonce !</p><button class="btn gold" onclick="go(\'vendre\')">➕ Publier maintenant</button></div>';
-  document.getElementById('prodCount').textContent = state.produits.length+' produit'+(state.produits.length>1?'s':'');
+  countEl.textContent = state.produits.length+' produit'+(state.produits.length>1?'s':'');
 }
 
 function renderCatalog(){
-  const cat = document.getElementById('filterCat').value;
+  const filterCatEl = document.getElementById('filterCat');
+  const catalogEl = document.getElementById('catalogProducts');
+  const catalogCountEl = document.getElementById('catalogCount');
+  if(!filterCatEl || !catalogEl || !catalogCountEl) return; // DOM pas encore prêt
+  const cat = filterCatEl.value;
   const reg = document.getElementById('filterRegion').value;
   const prc = document.getElementById('filterPrice').value;
   const sort = document.getElementById('filterSort').value;
@@ -631,7 +638,7 @@ function renderCatalog(){
   document.getElementById('catalogProducts').innerHTML = list.length
     ? list.map(renderProductCard).join('')
     : '<div class="empty"><div class="ic">🔍</div><p>Aucun produit ne correspond à vos critères.</p></div>';
-  document.getElementById('catalogCount').textContent = list.length+' résultat'+(list.length>1?'s':'');
+  catalogCountEl.textContent = list.length+' résultat'+(list.length>1?'s':'');
 }
 
 function rechercher(){
@@ -870,12 +877,14 @@ function renderPanier(){
 
 /* ==================== CHECKOUT ==================== */
 function renderCheckout(){
+  const checkoutEl = document.getElementById('checkoutContent');
+  if(!checkoutEl) return; // DOM pas encore prêt
   if(!state.panier.length){
-    document.getElementById('checkoutContent').innerHTML = '<div class="empty"><div class="ic">🛒</div><p>Panier vide</p><button class="btn" onclick="go(\'catalogue\')">Voir le marché</button></div>';
+    checkoutEl.innerHTML = '<div class="empty"><div class="ic">🛒</div><p>Panier vide</p><button class="btn" onclick="go(\'catalogue\')">Voir le marché</button></div>';
     return;
   }
   const total = totalPanier();
-  document.getElementById('checkoutContent').innerHTML = `
+  checkoutEl.innerHTML = `
     <div class="card">
       <h4>📋 Récapitulatif</h4>
       ${state.panier.map(it=>{ const p=state.produits.find(x=>x.id===it.id); return p?`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${escape(p.titre)} × ${it.qty}</span><span class="right" style="font-weight:700">${fmtPrix(p.prix*it.qty)}</span></div>`:''; }).join('')}
@@ -938,6 +947,7 @@ function confirmerCommande(){
 /* ==================== COMPTE ==================== */
 function renderCompte(){
   const c = document.getElementById('compteContent');
+  if(!c) return; // DOM pas encore prêt
   if(state.user){
     c.innerHTML = `
       <div class="card">
@@ -1008,6 +1018,7 @@ function supprimerAnnonce(id){
 /* ==================== COMMANDES ==================== */
 function renderCommandes(){
   const c = document.getElementById('commandesContent');
+  if(!c) return; // DOM pas encore prêt
   if(!state.commandes.length){
     c.innerHTML = '<div class="empty"><div class="ic">📦</div><p>Aucune commande pour le moment.</p><button class="btn" onclick="go(\'catalogue\')">🛍️ Voir le marché</button></div>';
     return;
