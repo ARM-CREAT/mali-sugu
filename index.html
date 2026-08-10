@@ -516,6 +516,44 @@ for(const k in DEFAULT){ if(state[k]===undefined) state[k]=JSON.parse(JSON.strin
 const bc = new BroadcastChannel('malisugu_sync');
 bc.onmessage = ()=>{ state = load(); window.state = state; renderAll(); };
 
+/* CORRECTIF PHOTO DEFINITIF : conserve un cache local des photos par ID
+   pour ne jamais perdre une photo même si Firebase la remplace par une version sans photo */
+window._msPhotoCache = window._msPhotoCache || {};
+try {
+  // Restaure le cache depuis localStorage au démarrage
+  var savedCache = localStorage.getItem('malisugu_photo_cache');
+  if(savedCache) window._msPhotoCache = JSON.parse(savedCache);
+} catch(e){}
+
+function msPhotoRemember(id, photoUrl){
+  if(!id || !photoUrl) return;
+  window._msPhotoCache[id] = photoUrl;
+  try { localStorage.setItem('malisugu_photo_cache', JSON.stringify(window._msPhotoCache)); } catch(e){}
+}
+
+function msPhotoRecall(p){
+  if(!p) return '';
+  // 1. Cache local (le plus fiable)
+  if(p.id && window._msPhotoCache[p.id]) return window._msPhotoCache[p.id];
+  // 2. Champ photo direct (web)
+  if(p.photo) return p.photo;
+  if(p.image) return p.image;
+  // 3. Champ Firebase mobile (imageUrl)
+  if(p.imageUrl){
+    var url = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl;
+    if(url && url.indexOf('gs://')===0){
+      var m = url.match(/^gs:\/\/([^/]+)\/(.+)$/);
+      if(m) url = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
+    }
+    // Mémorise pour la prochaine fois
+    if(url && p.id) msPhotoRemember(p.id, url);
+    return url;
+  }
+  // 4. Champ photos_urls (module caméra)
+  if(p.photos_urls) return String(p.photos_urls).split('|')[0];
+  return '';
+}
+
 /* ==================== ROUTING ==================== */
 function go(p){
   document.querySelectorAll('.page').forEach(s=>s.classList.remove('active'));
@@ -576,14 +614,7 @@ function getCatNom(catId){ const c=CATEGORIES.find(x=>x.id===catId); return c?c.
 
 function renderProductCard(p){
   const isNew = (Date.now()-p.date) < 48*3600*1000;
-  // Lit la photo depuis toutes les sources possibles (web + mobile Firebase)
-  var imgSrc = p.photo || p.image || '';
-  if(!imgSrc && p.imageUrl){ imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl; }
-  if(!imgSrc && p.photos_urls){ imgSrc = String(p.photos_urls).split('|')[0]; }
-  if(imgSrc && imgSrc.indexOf('gs://')===0){
-    var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
-    if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
-  }
+  var imgSrc = msPhotoRecall(p);
   return `<div class="product" onclick="voirDetail('${p.id}')">
     <div class="img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">
       ${!imgSrc?getCatIc(p.cat):''}
@@ -649,13 +680,7 @@ function filtrerCategorie(catId){
 function voirDetail(id){
   const p = state.produits.find(x=>x.id===id); if(!p) return;
   const waNum = (p.whatsapp||p.tel||'').replace(/[^0-9]/g,'');
-  var imgSrc = p.photo || p.image || '';
-  if(!imgSrc && p.imageUrl){ imgSrc = Array.isArray(p.imageUrl) ? (p.imageUrl[0]||'') : p.imageUrl; }
-  if(!imgSrc && p.photos_urls){ imgSrc = String(p.photos_urls).split('|')[0]; }
-  if(imgSrc && imgSrc.indexOf('gs://')===0){
-    var m = imgSrc.match(/^gs:\/\/([^/]+)\/(.+)$/);
-    if(m) imgSrc = 'https://firebasestorage.googleapis.com/v0/b/'+m[1]+'/o/'+encodeURIComponent(m[2])+'?alt=media';
-  }
+  var imgSrc = msPhotoRecall(p);
   document.getElementById('detailContent').innerHTML = `
     <div class="card product-detail">
       <div class="detail-img" style="${imgSrc?`background-image:url(${imgSrc})`:''}">${!imgSrc?getCatIc(p.cat):''}</div>
@@ -758,6 +783,9 @@ function publierProduit(){
     titre, cat, prix:+prix, etat, photo, desc,
     region, ville, gps, vendeur, tel, whatsapp
   };
+  // Mémorise la photo dans le cache local dès la publication
+  // pour ne jamais la perdre si Firebase se synchronise ensuite
+  if(photo){ msPhotoRemember(p.id, photo); }
   state.produits.push(p); save();
   modal(`<h3>🎉 Annonce publiée !</h3>
     <p>Votre annonce <strong>« ${escape(p.titre)} »</strong> est maintenant visible dans le marché MALI SUGU.</p>
