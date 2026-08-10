@@ -1206,23 +1206,6 @@ init();
 
 <!-- Branchement Firebase (sync temps réel multi-appareils) -->
 <script type="module" src="firebase-config.js"></script>
-
-<!-- SDK Firebase compat -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script>
-  // Initialisation immédiate (avant que les modules JS n'essaient d'utiliser Firebase)
-  if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp({
-      apiKey: "AIzaSyAwoMG6EiciOTBawqMN4p-A-20BJHf4v3U",
-      authDomain: "mali-sugu-ed117.firebaseapp.com",
-      projectId: "mali-sugu-ed117",
-      storageBucket: "mali-sugu-ed117.firebasestorage.app",
-      messagingSenderId: "583727735875",
-      appId: "1:583727735875:web:7c9143aa2b04b8137fa0f6"
-    });
-  }
-</script>
 <script src="/ms-infinite-scroll.js" defer></script>
 <script src="/ms-paiement.js" defer></script>
  <script src="/ms-auth.js" defer></script>
