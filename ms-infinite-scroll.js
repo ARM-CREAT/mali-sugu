@@ -18,7 +18,7 @@
      CONFIGURATION
   ───────────────────────────────────────── */
   var CFG = {
-    collection: 'annonces',          // Nom de la collection Firestore
+    collection: 'produits',          // Nom de la collection Firestore
     pageSize: 20,                    // Articles par chargement
     preloadAt: 0.65,                 // Précharger quand 65% du contenu visible
     cacheTTL: 5 * 60 * 1000,        // Cache 5 minutes
@@ -747,7 +747,7 @@
     var el = document.querySelector('[data-ms-auto]');
     if (el) {
       window.MaliSuguScroll.init(el.id || 'ms-grid', {
-        collection: el.dataset.msCollection || 'annonces'
+        collection: el.dataset.msCollection || 'produits'
       });
     }
   });
