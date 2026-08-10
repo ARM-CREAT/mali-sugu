@@ -29,7 +29,7 @@
       couleur: '#fcd116',
       query: function () {
         // Produits avec boost actif
-        return db.collection('produits')
+        return db.collection('annonces')
           .where('boost_jusqua', '>', new Date().toISOString())
           .limit(CFG.pageSize);
       }
@@ -40,8 +40,8 @@
       sousTitre: 'Les plus récents',
       couleur: '#14a44d',
       query: function (lastDoc) {
-        var q = db.collection('produits')
-          .orderBy('created_at', 'desc')
+        var q = db.collection('annonces')
+          .orderBy('createdAt', 'desc')
           .limit(CFG.pageSize);
         return lastDoc ? q.startAfter(lastDoc) : q;
       }
@@ -54,7 +54,7 @@
       query: function () {
         var pos = JSON.parse(localStorage.getItem('ms_user_position') || 'null');
         if (!pos) return null; // pas de géoloc → on saute ce carrousel
-        return db.collection('produits').limit(40); // on filtre côté client
+        return db.collection('annonces').limit(40); // on filtre côté client
       },
       filtre: function (docs) {
         var pos = JSON.parse(localStorage.getItem('ms_user_position') || 'null');
@@ -73,7 +73,7 @@
       sousTitre: 'Les favoris des clients',
       couleur: '#ff9500',
       query: function () {
-        return db.collection('produits').limit(30); // filtré côté client
+        return db.collection('annonces').limit(30); // filtré côté client
       },
       filtre: function (docs) {
         return docs.filter(function (d) {
@@ -103,7 +103,7 @@
         var topCat = Object.entries(catCount).sort(function (a, b) { return b[1] - a[1]; })[0];
         if (!topCat) return null;
 
-        return db.collection('produits')
+        return db.collection('annonces')
           .where('categorie', '==', topCat[0])
           .limit(CFG.pageSize);
       }
